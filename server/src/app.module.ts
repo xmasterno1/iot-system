@@ -3,7 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { DataSensorModule } from './data-sensor/data-sensor.module';
+import { DataSensor } from './data-sensor/entities/data-sensor.entity';
+import { ActionHistoryModule } from './action-history/action-history.module';
+import { ActionHistory } from './action-history/entities/action-history.entity';
 import * as dotenv from 'dotenv';
+import { MqttModule } from './mqtt/mqtt.module';
 
 // Load .env file
 dotenv.config();
@@ -18,9 +23,12 @@ dotenv.config();
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: [],
+      entities: [DataSensor, ActionHistory],
       synchronize: true,
     }),
+    DataSensorModule,
+    ActionHistoryModule,
+    MqttModule,
   ],
   controllers: [AppController],
   providers: [AppService],
