@@ -8,18 +8,18 @@ export class DataSensor {
   id: number;
 
   @ApiProperty()
-  @Column()
+  @Column({ type: 'float' })
   temperature: number;
 
   @ApiProperty()
-  @Column()
+  @Column({ type: 'float' })
   humidity: number;
 
   @ApiProperty()
-  @Column()
+  @Column({ type: 'float' })
   light: number;
 
   @ApiProperty()
-  @Column()
+  @Column({ type: 'datetime' })
   time: Date;
 }

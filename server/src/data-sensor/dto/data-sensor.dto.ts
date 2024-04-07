@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateDataSensorDto {
+export class DataSensorDto {
   @ApiProperty()
   temperature: number;
 

@@ -1,20 +1,11 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { DataSensorService } from './data-sensor.service';
-import { CreateDataSensorDto } from './dto/create-data-sensor.dto';
-import { UpdateDataSensorDto } from './dto/update-data-sensor.dto';
+import { DataSensorDto } from './dto/data-sensor.dto';
 import {
-  EFilterType,
-  ESortByColumnType,
-  ESortOrderType,
+  EDataFilter,
+  EDataSearchField,
+  EDataSortColumn,
+  ESortOrder,
 } from 'src/common/types';
 import {
   ApiCreatedResponse,
@@ -29,11 +20,14 @@ export class DataSensorController {
   constructor(private readonly dataSensorService: DataSensorService) {}
 
   @Post()
-  create(@Body() createDataSensorDto: CreateDataSensorDto) {
+  @ApiOperation({
+    summary: 'Create a new record of data sensor',
+  })
+  create(@Body() createDataSensorDto: DataSensorDto) {
     return this.dataSensorService.create(createDataSensorDto);
   }
 
-  // pagination, seach, filter, sort
+  // filter, sort & pagination
   @Get()
   @ApiOperation({
     summary: 'Get data in data sensor',
@@ -51,28 +45,21 @@ export class DataSensorController {
     description: 'How many records do you want each page to display?',
   })
   @ApiQuery({
-    name: 'search',
-    type: String,
-    required: false,
-    description:
-      'Enter the date you want to search for. For example: 2024-04-01',
-  })
-  @ApiQuery({
     name: 'filter',
-    enum: EFilterType,
+    enum: EDataFilter,
     required: false,
     description: 'Filter by Temperature, Humidity, Light or All',
   })
   @ApiQuery({
     name: 'sortByCol',
-    enum: ESortByColumnType,
+    enum: EDataSortColumn,
     required: false,
     description:
       'The column you want to sortcolumn you want to sort. Including: ID, temperature, humidity, light, time',
   })
   @ApiQuery({
     name: 'sortOrder',
-    enum: ESortOrderType,
+    enum: ESortOrder,
     required: false,
     description:
       'The order you want to sort. For example: ASC = ascending, DESC = descending',
@@ -84,34 +71,34 @@ export class DataSensorController {
         examples: {
           data: {
             value: {
-              totalRecords: 838,
+              totalRecords: 25,
               page: '1',
-              limit: '5',
+              rowsPerPage: '5',
               data: [
                 {
-                  id: 1,
-                  temperature: 23,
-                  time: '2024-03-16 11:30:58',
-                },
-                {
                   id: 2,
-                  temperature: 23,
-                  time: '2024-03-16 11:31:01',
+                  humidity: 62,
+                  time: '2024-03-06T12:53:48.000Z',
                 },
                 {
                   id: 3,
-                  temperature: 24,
-                  time: '2024-03-16 11:31:04',
+                  humidity: 61,
+                  time: '2024-05-18T21:10:29.000Z',
                 },
                 {
-                  id: 4,
-                  temperature: 24,
-                  time: '2024-03-16 11:31:07',
+                  id: 1,
+                  humidity: 60,
+                  time: '2024-01-10T01:24:15.000Z',
                 },
                 {
                   id: 5,
-                  temperature: 23,
-                  time: '2024-03-16 11:31:10',
+                  humidity: 59,
+                  time: '2024-09-30T08:07:42.000Z',
+                },
+                {
+                  id: 4,
+                  humidity: 58,
+                  time: '2024-07-18T06:29:55.000Z',
                 },
               ],
             },
@@ -120,18 +107,16 @@ export class DataSensorController {
       },
     },
   })
-  getDataSensor(
+  getAll(
     @Query('page') page: number = 1,
-    @Query('rowsPerPage') rowsPerPage: number = 10,
-    @Query('search') search: string = '',
-    @Query('filter') filter: EFilterType = EFilterType.ALL,
-    @Query('sortByCol') sortByCol: ESortByColumnType = ESortByColumnType.ID,
-    @Query('sortOrder') sortOrder: ESortOrderType = ESortOrderType.ASC,
+    @Query('rowsPerPage') rowsPerPage: number = 5,
+    @Query('filter') filter: EDataFilter = EDataFilter.ALL,
+    @Query('sortByCol') sortByCol: EDataSortColumn = EDataSortColumn.ID,
+    @Query('sortOrder') sortOrder: ESortOrder = ESortOrder.ASC,
   ) {
-    const resData = this.dataSensorService.getDataSensor(
+    const resData = this.dataSensorService.getAll(
       page,
       rowsPerPage,
-      search,
       filter,
       sortByCol,
       sortOrder,
@@ -139,21 +124,104 @@ export class DataSensorController {
     return resData;
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.dataSensorService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateDataSensorDto: UpdateDataSensorDto,
+  // search
+  @Get('search')
+  @ApiOperation({
+    summary: 'Search via temperature, humidity or light',
+  })
+  @ApiQuery({
+    name: 'value',
+    type: Number,
+    description: 'Value you want to search',
+  })
+  @ApiQuery({
+    name: 'searchField',
+    enum: EDataSearchField,
+    description: 'Field you want to search: temperature, humidity or light',
+  })
+  @ApiQuery({
+    name: 'page',
+    type: Number,
+    required: false,
+    description: 'Which page do you want to get data from?',
+  })
+  @ApiQuery({
+    name: 'rowsPerPage',
+    type: Number,
+    required: false,
+    description: 'How many records do you want each page to display?',
+  })
+  @ApiQuery({
+    name: 'sortByCol',
+    enum: EDataSortColumn,
+    required: false,
+    description:
+      'The column you want to sortcolumn you want to sort. Including: ID, temperature, humidity, light, time',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    enum: ESortOrder,
+    required: false,
+    description:
+      'The order you want to sort. For example: ASC = ascending, DESC = descending',
+  })
+  @ApiCreatedResponse({
+    description: 'Get data successfully',
+    content: {
+      'application/json': {
+        examples: {
+          data: {
+            value: {
+              totalRecords: 13,
+              page: '1',
+              rowsPerPage: '3',
+              data: [
+                {
+                  id: 2,
+                  temperature: 22,
+                  humidity: 62,
+                  light: 290,
+                  time: '2024-03-06T12:53:48.000Z',
+                },
+                {
+                  id: 3,
+                  temperature: 22,
+                  humidity: 61,
+                  light: 295,
+                  time: '2024-05-18T21:10:29.000Z',
+                },
+                {
+                  id: 1,
+                  temperature: 22,
+                  humidity: 60,
+                  light: 300,
+                  time: '2024-01-10T01:24:15.000Z',
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+  })
+  getViaSearch(
+    @Query('value') value: number,
+    @Query('searchField') searchField: EDataSearchField,
+    @Query('page') page: number = 1,
+    @Query('rowsPerPage') rowsPerPage: number = 5,
+    @Query('sortByCol') sortByCol: EDataSortColumn = EDataSortColumn.ID,
+    @Query('sortOrder') sortOrder: ESortOrder = ESortOrder.ASC,
   ) {
-    return this.dataSensorService.update(+id, updateDataSensorDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.dataSensorService.remove(+id);
+    if (value && searchField) {
+      const resData = this.dataSensorService.getViaSearch(
+        value,
+        searchField,
+        page,
+        rowsPerPage,
+        sortByCol,
+        sortOrder,
+      );
+      return resData;
+    }
   }
 }

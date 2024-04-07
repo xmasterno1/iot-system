@@ -1,19 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { CreateActionHistoryDto } from './dto/create-action-history.dto';
-import { UpdateActionHistoryDto } from './dto/update-action-history.dto';
+import { ActionHistoryDto } from './dto/action-history.dto';
 import { ActionHistory } from './entities/action-history.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSensor } from 'src/data-sensor/entities/data-sensor.entity';
 import { Repository } from 'typeorm';
-import { ESortOrderType } from 'src/common/types';
+import { EActionFilter, EActionSortColumn, ESortOrder } from 'src/common/types';
 @Injectable()
 export class ActionHistoryService {
   constructor(
     @InjectRepository(ActionHistory)
-    private ActionHistoryRepository: Repository<DataSensor>,
+    private ActionHistoryRepository: Repository<ActionHistory>,
   ) {}
 
-  async create(newAction: CreateActionHistoryDto) {
+  async create(newAction: ActionHistoryDto) {
     const newActionHistory = this.ActionHistoryRepository.create(newAction);
     const savedData = await this.ActionHistoryRepository.save(newActionHistory);
     return savedData;
@@ -22,59 +20,149 @@ export class ActionHistoryService {
   async getActionHistory(
     page: number,
     rowsPerPage: number,
-    search: string,
-    filter: string,
-    sortbyCol: string,
-    sortOrder: ESortOrderType,
+    filter: EActionFilter,
+    sortByCol: string,
+    sortOrder: ESortOrder,
   ) {
     let query =
       this.ActionHistoryRepository.createQueryBuilder('actionHistory');
 
-    if (search) {
-      const searchKey = new Date(search);
-
-      // Create start and end time limits for the day
-      const startDate = new Date(searchKey);
-      startDate.setHours(0, 0, 0); // 0:0:0
-      const endDate = new Date(searchKey);
-      endDate.setHours(23, 59, 59); // 23:59:59
-
-      query = query
-        .where('actionHistory.time >= :startDate', { startDate })
-        .andWhere('actionHistory.time <= :endDate', { endDate });
+    switch (filter) {
+      case EActionFilter.ON:
+        query = query.where('actionHistory.action = :action', { action: 'ON' });
+        break;
+      case EActionFilter.OFF:
+        query = query.where('actionHistory.action = :action', {
+          action: 'OFF',
+        });
+        break;
+      default:
     }
 
-    if (filter !== 'all') {
-      query = query.where('actionHistory.device = :device', {
-        device: filter,
-      });
-    }
-
-    if (sortbyCol === 'time') {
-      query = query.orderBy(`actionHistory.${sortbyCol}`, sortOrder);
-    } else {
-      query = query.orderBy('actionHistory.id', sortOrder);
-    }
-    const totalRecords = await query.getCount();
     const numberOfRecordsToSkip = (page - 1) * rowsPerPage;
-    const data = await query
+    const [data, totalRecords] = await query
       .skip(numberOfRecordsToSkip)
       .take(rowsPerPage)
-      .getMany();
+      .getManyAndCount();
 
-    const resData = { totalRecords, page, rowsPerPage, data };
+    // Sắp xếp dữ liệu
+    data.sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortByCol) {
+        case EActionSortColumn.DEVICE_NAME:
+          aValue = a.deviceName;
+          bValue = b.deviceName;
+          break;
+        case EActionSortColumn.ACTION:
+          aValue = a.action;
+          bValue = b.action;
+          break;
+        case EActionSortColumn.TIME:
+          aValue = a.time.getTime();
+          bValue = b.time.getTime();
+          break;
+        default:
+          aValue = a.id;
+          bValue = b.id;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        if (sortOrder === ESortOrder.ASC) {
+          return aValue.localeCompare(bValue);
+        } else {
+          return bValue.localeCompare(aValue);
+        }
+      }
+
+      if (aValue === bValue) return 0;
+      if (sortOrder === ESortOrder.ASC) {
+        return aValue < bValue ? -1 : 1;
+      } else {
+        return aValue > bValue ? -1 : 1;
+      }
+    });
+
+    const formattedData = data.map((item) => {
+      return {
+        ...item,
+        time: new Date(item.time).toLocaleString(),
+      };
+    });
+
+    const resData = { totalRecords, page, rowsPerPage, data: formattedData };
+
     return resData;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} actionHistory`;
-  }
+  async getViaSearch(
+    value: string,
+    page: number,
+    rowsPerPage: number,
+    sortByCol: EActionSortColumn,
+    sortOrder: ESortOrder,
+  ) {
+    const query =
+      this.ActionHistoryRepository.createQueryBuilder('actionHistory');
+    query.andWhere('actionHistory.deviceName = :value', { value });
 
-  update(id: number, updateActionHistoryDto: UpdateActionHistoryDto) {
-    return `This action updates a #${id} actionHistory`;
-  }
+    const numberOfRecordsToSkip = (page - 1) * rowsPerPage;
+    const [data, totalRecords] = await query
+      .skip(numberOfRecordsToSkip)
+      .take(rowsPerPage)
+      .getManyAndCount();
 
-  remove(id: number) {
-    return `This action removes a #${id} actionHistory`;
+    // Sắp xếp dữ liệu
+    data.sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortByCol) {
+        case EActionSortColumn.DEVICE_NAME:
+          aValue = a.deviceName;
+          bValue = b.deviceName;
+          break;
+        case EActionSortColumn.ACTION:
+          aValue = a.action;
+          bValue = b.action;
+          break;
+        case EActionSortColumn.TIME:
+          aValue = a.time.getTime();
+          bValue = b.time.getTime();
+          break;
+        default:
+          aValue = a.id;
+          bValue = b.id;
+      }
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        if (sortOrder === ESortOrder.ASC) {
+          return aValue.localeCompare(bValue);
+        } else {
+          return bValue.localeCompare(aValue);
+        }
+      }
+
+      if (aValue === bValue) return 0;
+      if (sortOrder === ESortOrder.ASC) {
+        return aValue < bValue ? -1 : 1;
+      } else {
+        return aValue > bValue ? -1 : 1;
+      }
+    });
+
+    const formattedData = data.map((item) => {
+      return {
+        ...item,
+        time: new Date(item.time).toLocaleString(),
+      };
+    });
+
+    const resData = {
+      totalRecords,
+      page,
+      rowsPerPage,
+      data: formattedData,
+    };
+
+    return resData;
   }
 }

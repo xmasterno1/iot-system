@@ -10,13 +10,13 @@ export class ActionHistory {
 
   @ApiProperty()
   @Column()
-  deviceId: number;
+  deviceName: string;
 
   @ApiProperty()
   @Column({ type: 'enum', enum: EActionType })
   action: EActionType;
 
-  @Column()
   @ApiProperty()
+  @Column({ type: 'datetime' })
   time: Date;
 }

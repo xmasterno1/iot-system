@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { EActionType } from 'src/common/types';
 
-export class CreateActionHistoryDto {
+export class ActionHistoryDto {
   @ApiProperty()
-  deviceId: number;
+  deviceName: string;
 
   @ApiProperty()
   action: EActionType;
