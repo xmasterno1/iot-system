@@ -19,12 +19,15 @@
 - Step 2: Cài đặt các dependencies và config lại database.
 
   Trỏ đến thư mục server và gõ `npm i` để cài đặt các dependencies cần thiết
+
   ![alt text](image-1.png)
 
   Làm tương tự với thư mục client
+
   ![alt text](image-2.png)
 
   Vào file .env ở server và sửa lại cho khớp username, password và tên database ở local.
+
   ![alt text](image.png)
 
 - Step 3: Kết nối laptop với mạch:
@@ -33,12 +36,15 @@
 
 - Step 4: Chạy song song server và client:
   Tại đường dẫn đến thư mục server, gõ `npm run start:dev` để chạy server
+
   ![alt text](image-4.png)
 
   Sau đó `cd ../client` để trỏ đến đường dẫn client, gõ `npm run dev` để chạy client
+
   ![alt text](image-5.png)
 
   Truy cập `http://localhost:3000/api/` để xem apidocs
+
   ![alt text](image-6.png)
 
 ## 3. Tài liệu và tham khảo
