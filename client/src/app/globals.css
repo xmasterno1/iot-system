@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+
+body {
+    background-image: url('../asset/img/appenzell-alps-switzerland-mountains.jpg');
+    background-size: cover;
+}

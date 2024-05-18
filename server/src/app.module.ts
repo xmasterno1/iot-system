@@ -4,11 +4,11 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { DataSensorModule } from './data-sensor/data-sensor.module';
-import { DataSensor } from './data-sensor/entities/data-sensor.entity';
+import { DataSensor } from './data-sensor/data-sensor.entity';
 import { ActionHistoryModule } from './action-history/action-history.module';
-import { ActionHistory } from './action-history/entities/action-history.entity';
+import { ActionHistory } from './action-history/action-history.entity';
 import * as dotenv from 'dotenv';
-import { MqttModule } from './mqtt/mqtt.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 // Load .env file
 dotenv.config();
@@ -28,7 +28,7 @@ dotenv.config();
     }),
     DataSensorModule,
     ActionHistoryModule,
-    MqttModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

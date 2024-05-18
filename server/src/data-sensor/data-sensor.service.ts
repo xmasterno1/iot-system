@@ -1,14 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSensorDto } from './dto/data-sensor.dto';
-import {
-  EDataFilter,
-  EDataSearchField,
-  EDataSortColumn,
-  ESortOrder,
-} from 'src/common/types';
+import { DataSensorDto } from './data-sensor.dto';
 import { Repository } from 'typeorm';
-import { DataSensor } from './entities/data-sensor.entity';
+import { DataSensor } from './data-sensor.entity';
 
 @Injectable()
 export class DataSensorService {
@@ -23,166 +17,44 @@ export class DataSensorService {
     return savedData;
   }
 
-  async getAll(
+  async getData(
+    searchValue: string,
+    field: string,
     page: number,
-    rowsPerPage: number,
-    filter: EDataFilter,
-    sortByCol: EDataSortColumn,
-    sortOrder: ESortOrder,
+    pageSize: number,
+    sortBy: string,
+    sortOrder: 'ASC' | 'DESC' = 'ASC',
   ) {
     const query = this.DataSensorRepository.createQueryBuilder('dataSensor');
-
-    switch (filter) {
-      case EDataFilter.TEMPERATURE:
-        query
-          .select('dataSensor.id')
-          .addSelect('dataSensor.temperature')
-          .addSelect('dataSensor.time');
-        break;
-      case EDataFilter.HUMIDITY:
-        query
-          .select('dataSensor.id')
-          .addSelect('dataSensor.humidity')
-          .addSelect('dataSensor.time');
-        break;
-      case EDataFilter.LIGHT:
-        query
-          .select('dataSensor.id')
-          .addSelect('dataSensor.light')
-          .addSelect('dataSensor.time');
-        break;
-      default:
-        break;
+    if (field && ['temp', 'hum', 'light'].includes(field)) {
+      // Nếu field là temp, hum hoặc light, tìm kiếm chính xác theo giá trị số
+      query.where(`dataSensor.${field} = :searchValue`, {
+        searchValue: Number(searchValue),
+      });
+    } else if (searchValue) {
+      // Nếu field là chuỗi rỗng, tìm kiếm theo ký tự ở tất cả các trường
+      query.where(
+        `dataSensor.id = :searchValue 
+        OR dataSensor.temp = :searchValue 
+        OR dataSensor.hum = :searchValue 
+        OR dataSensor.light = :searchValue 
+        OR dataSensor.createdAt LIKE :searchString`,
+        { searchValue: Number(searchValue), searchString: `%${searchValue}%` },
+      );
     }
 
-    const numberOfRecordsToSkip = (page - 1) * rowsPerPage;
+    const numberOfRecordsToSkip = (page - 1) * pageSize;
     const [data, totalRecords] = await query
+      .orderBy(`dataSensor.${sortBy}`, sortOrder)
       .skip(numberOfRecordsToSkip)
-      .take(rowsPerPage)
+      .take(pageSize)
       .getManyAndCount();
-
-    // Sắp xếp dữ liệu
-    data.sort((a, b) => {
-      let aValue, bValue;
-
-      switch (sortByCol) {
-        case EDataSortColumn.TEMPERATURE:
-          aValue = a.temperature;
-          bValue = b.temperature;
-          break;
-        case EDataSortColumn.HUMIDITY:
-          aValue = a.humidity;
-          bValue = b.humidity;
-          break;
-        case EDataSortColumn.LIGHT:
-          aValue = a.light;
-          bValue = b.light;
-          break;
-        case EDataSortColumn.TIME:
-          aValue = a.time.getTime();
-          bValue = b.time.getTime();
-          break;
-        default:
-          aValue = a.id;
-          bValue = b.id;
-      }
-
-      if (aValue === bValue) return 0;
-      if (sortOrder === ESortOrder.ASC) {
-        return aValue < bValue ? -1 : 1;
-      } else {
-        return aValue > bValue ? -1 : 1;
-      }
-    });
-
-    const formattedData = data.map((item) => {
-      return {
-        ...item,
-        time: new Date(item.time).toLocaleString(),
-      };
-    });
-
-    const resData = { totalRecords, page, rowsPerPage, data: formattedData };
-
-    return resData;
-  }
-
-  async getViaSearch(
-    value: number,
-    field: EDataSearchField,
-    page: number,
-    rowsPerPage: number,
-    sortByCol: EDataSortColumn,
-    sortOrder: ESortOrder,
-  ) {
-    const query = this.DataSensorRepository.createQueryBuilder('dataSensor');
-
-    switch (field) {
-      case EDataSearchField.TEMPERATURE:
-        query.andWhere('dataSensor.temperature = :value', { value });
-        break;
-      case EDataSearchField.HUMIDITY:
-        query.andWhere('dataSensor.humidity = :value', { value });
-        break;
-      case EDataSearchField.LIGHT:
-        query.andWhere('dataSensor.light = :value', { value });
-        break;
-      default:
-        break;
-    }
-
-    const numberOfRecordsToSkip = (page - 1) * rowsPerPage;
-    const [data, totalRecords] = await query
-      .skip(numberOfRecordsToSkip)
-      .take(rowsPerPage)
-      .getManyAndCount();
-
-    // Sắp xếp dữ liệu
-    data.sort((a, b) => {
-      let aValue, bValue;
-
-      switch (sortByCol) {
-        case EDataSortColumn.TEMPERATURE:
-          aValue = a.temperature;
-          bValue = b.temperature;
-          break;
-        case EDataSortColumn.HUMIDITY:
-          aValue = a.humidity;
-          bValue = b.humidity;
-          break;
-        case EDataSortColumn.LIGHT:
-          aValue = a.light;
-          bValue = b.light;
-          break;
-        case EDataSortColumn.TIME:
-          aValue = a.time.getTime();
-          bValue = b.time.getTime();
-          break;
-        default:
-          aValue = a.id;
-          bValue = b.id;
-      }
-
-      if (aValue === bValue) return 0;
-      if (sortOrder === ESortOrder.ASC) {
-        return aValue < bValue ? -1 : 1;
-      } else {
-        return aValue > bValue ? -1 : 1;
-      }
-    });
-
-    const formattedData = data.map((item) => {
-      return {
-        ...item,
-        time: new Date(item.time).toLocaleString(),
-      };
-    });
 
     const resData = {
       totalRecords,
       page,
-      rowsPerPage,
-      data: formattedData,
+      pageSize,
+      data,
     };
 
     return resData;
