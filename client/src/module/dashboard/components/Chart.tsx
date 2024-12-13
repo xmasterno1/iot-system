@@ -24,7 +24,7 @@ interface DataEntry {
   temp: number;
   hum: number;
   light: number;
-  time: string;
+  createdAt: string;
 }
 
 interface DashboardProps {
@@ -44,6 +44,8 @@ const LineChart = ({dataSensors}: DashboardProps) => {
         type: "linear" as const,
         display: true,
         position: "left" as const,
+        min: 0,
+        max: 200,
       },
       y1: {
         type: "linear" as const,
@@ -52,12 +54,14 @@ const LineChart = ({dataSensors}: DashboardProps) => {
         grid: {
           drawOnChartArea: false,
         },
+        min: 0,
+        max: 2000,
       },
     },
   };
 
   const data = {
-    labels: dataSensors.map((item) => item.time),
+    labels: dataSensors.map((item) => item.createdAt),
     datasets: [
       {
         label: "Temperature",

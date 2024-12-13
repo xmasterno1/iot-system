@@ -8,7 +8,7 @@ const devices = [
     hasSWitch: true,
   },
   {
-    type: EDevice.BULB,
+    type: EDevice.LED,
     image: images.bulbOn,
     hasSWitch: true,
   },

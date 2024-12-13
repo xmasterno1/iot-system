@@ -1,10 +1,6 @@
-import {TableColumnsType, TableProps} from "antd";
-import {FilterValue} from "antd/es/table/interface";
-import React from "react";
-
 export enum EDevice {
   FAN = "fan",
-  BULB = "bulb",
+  LED = "led",
 }
 
 export interface IDataSensor {
@@ -12,6 +8,7 @@ export interface IDataSensor {
   temp: number;
   hum: number;
   light: number;
+  wind: number;
   createdAt: string;
 }
 
@@ -35,13 +32,6 @@ export interface IDeviceCard {
   type: EDevice;
 }
 
-export interface SearchBarProps {
-  typeSearch: string;
-  options: {label: string; value: string}[];
-  params: IQueryParams;
-  setParams: React.Dispatch<React.SetStateAction<IQueryParams>>;
-}
-
 export interface IQueryParams {
   searchValue?: string;
   field?: string;
@@ -49,13 +39,5 @@ export interface IQueryParams {
   sortOrder?: string;
   page?: number;
   pageSize?: number;
-  filter?: Record<string, FilterValue | null>;
-}
-
-export interface ICustomTable<T extends Record<string, any>>
-  extends TableProps<T> {
-  typeTable: string;
-  columns: TableColumnsType<T>;
-  params: IQueryParams;
-  setParams: React.Dispatch<React.SetStateAction<IQueryParams>>;
+  filter?: string;
 }

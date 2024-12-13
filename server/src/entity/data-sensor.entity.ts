@@ -6,21 +6,28 @@ import {
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
-@Entity({ name: 'action_history' })
-export class ActionHistory {
+@Entity()
+export class DataSensor {
   @ApiProperty()
   @PrimaryGeneratedColumn()
   id: number;
 
   @ApiProperty()
-  @Column()
-  device: string;
+  @Column({ type: 'float' })
+  temp: number;
 
   @ApiProperty()
-  @Column()
-  action: string;
+  @Column({ type: 'float' })
+  hum: number;
 
   @ApiProperty()
+  @Column({ type: 'float' })
+  light: number;
+
+  @Column({ type: 'float', nullable: true })
+  wind: number;
+
+  @ApiProperty({ description: 'createdAt' })
   @CreateDateColumn()
   createdAt: Date;
 }

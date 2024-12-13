@@ -10,7 +10,7 @@ const SensorCard = ({
 }: ISensorCard): JSX.Element => {
   return (
     <div
-      className={`h-40 rounded-xl p-2 shadow-inner text-slate-600 text-center font-logo font-bold relative ${title === "Temperature" && data > 24 ? "animate-pulse" : bgColor}`}
+      className={`h-40 rounded-xl p-2 shadow-inner text-slate-600 text-center font-logo font-bold relative ${title === "Wind speed" && data < 15 ? "animate-pulse" : bgColor}`}
     >
       <Image
         src={iconUrl}
