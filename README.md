@@ -2,14 +2,6 @@
 
 - Hệ thống IoT web application sử dụng ESP8266 để lưu trữ dữ liệu nhiệt độ, độ ẩm, ánh sáng và bật/tắt đèn/quạt.
 
-- Luồng hoạt động:
-
-* Hiển thị dữ liệu:
-  Hardware kết nối với Server (NestJS) thông qua MQTT broker--> Dữ liệu từ hardware sẽ được Server lưu vào database (MySQL). Server cung cấp các API cho Client (NextJS) để hiển thị dữ liệu cho người dùng.
-
-* Bật/Tắt đèn/quạt:
-  <Đang phát triển>
-
 ## 2. Setup:
 
 - Step 1: Vào link sau và clone dự án về máy:
